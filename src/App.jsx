@@ -1,5 +1,6 @@
 import Generator from './components/Generator';
 import './index.css';
+import Footer from './components/Footer';
 
 function App() {
   return (
@@ -8,6 +9,7 @@ function App() {
       <div className="w-full h-full min-h-screen items-center">
         <Generator />
       </div>
+      <Footer />
     </>
   );
 }
