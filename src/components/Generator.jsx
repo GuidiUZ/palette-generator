@@ -7,36 +7,65 @@ import { useState, useEffect } from 'react';
 
 export default function Generator() {
   const [selectedColor, setSelectedColor] = useState('#f6b73c');
+  const [debouncedColor, setDebouncedColor] = useState(selectedColor);
   const [previewSelected, setPreviewSelected] = useState(false);
   const [previewColor, setPreviewColor] = useState('');
   const [palette, setPalette] = useState([]);
-  const [paletteColorPicker, setPaletteColorPicker] = useState(false);
-  const [paletteColorName, setPaletteColorName] = useState(false);
 
   useEffect(() => {
-    generatePalette();
-  }, [paletteColorPicker]);
+    const timeout = setTimeout(() => {
+      setDebouncedColor(selectedColor);
+    }, 300);
 
-  const handleSelectedColor = (event) => {
-    let newColor = event.target.value;
-    setPaletteColorPicker(!paletteColorPicker);
-    setSelectedColor(newColor);
-    setPreviewSelected(false);
-    generatePalette();
-  };
+    return () => clearTimeout(timeout);
+  }, [selectedColor]);
 
-  const generatePalette = () => {
-    if (chroma.valid(selectedColor)) {
+  useEffect(() => {
+    if (
+      chroma.valid(debouncedColor) &&
+      debouncedColor.startsWith('#') &&
+      debouncedColor.length !== 5 &&
+      debouncedColor.length <= 7
+    ) {
       let generatedPalette = chroma
         .scale([
-          chroma(selectedColor).brighten(3),
-          selectedColor,
-          chroma(selectedColor).darken(3),
+          chroma(debouncedColor).brighten(3),
+          debouncedColor,
+          chroma(debouncedColor).darken(3),
         ])
         .mode('lab')
         .colors(9);
       setPalette(generatedPalette);
+    } else if (
+      chroma.valid(debouncedColor) &&
+      !debouncedColor.startsWith('#') &&
+      debouncedColor.length !== 4 &&
+      debouncedColor.length <= 7
+    ) {
+      let generatedPalette = chroma
+        .scale([
+          chroma(debouncedColor).brighten(3),
+          debouncedColor,
+          chroma(debouncedColor).darken(3),
+        ])
+        .mode('lab')
+        .colors(9);
+      setPalette(generatedPalette);
+      setSelectedColor('#' + debouncedColor);
+    } else {
+      let generatedPaletteElse = chroma
+        .scale([chroma('#000').brighten(3), '#000', chroma('#000').darken(3)])
+        .mode('lab')
+        .colors(9);
+      setPalette(generatedPaletteElse);
     }
+    console.log('effect 1');
+  }, [debouncedColor]);
+
+  const handleSelectedColor = (event) => {
+    let newColor = event.target.value;
+    setSelectedColor(newColor);
+    setPreviewSelected(false);
   };
 
   //input text here:
@@ -45,53 +74,6 @@ export default function Generator() {
     let inputColor = event.target.value;
     setSelectedColor(inputColor);
     setPreviewSelected(false);
-    setPaletteColorName(!paletteColorName);
-    generatePaletteThroughName();
-  };
-
-  useEffect(() => {
-    generatePaletteThroughName();
-  }, [paletteColorName]);
-
-  const generatePaletteThroughName = () => {
-    if (
-      chroma.valid(selectedColor) &&
-      selectedColor.startsWith('#') &&
-      selectedColor.length !== 5 &&
-      selectedColor.length <= 7
-    ) {
-      let generatedPalette = chroma
-        .scale([
-          chroma(selectedColor).brighten(3),
-          selectedColor,
-          chroma(selectedColor).darken(3),
-        ])
-        .mode('lab')
-        .colors(9);
-      setPalette(generatedPalette);
-    } else if (
-      chroma.valid(selectedColor) &&
-      !selectedColor.startsWith('#') &&
-      selectedColor.length !== 4 &&
-      selectedColor.length <= 7
-    ) {
-      let generatedPalette = chroma
-        .scale([
-          chroma(selectedColor).brighten(3),
-          selectedColor,
-          chroma(selectedColor).darken(3),
-        ])
-        .mode('lab')
-        .colors(9);
-      setPalette(generatedPalette);
-      setSelectedColor('#' + selectedColor);
-    } else {
-      let generatedPaletteElse = chroma
-        .scale([chroma('#000').brighten(3), '#000', chroma('#000').darken(3)])
-        .mode('lab')
-        .colors(9);
-      setPalette(generatedPaletteElse);
-    }
   };
 
   //clipboard handle
@@ -111,8 +93,6 @@ export default function Generator() {
 
   const handleRandomColor = () => {
     setSelectedColor(chroma.random().hex());
-    generatePalette();
-    setPaletteColorPicker(!paletteColorPicker);
     setPreviewSelected(false);
   };
 
