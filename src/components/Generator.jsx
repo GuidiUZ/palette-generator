@@ -59,7 +59,6 @@ export default function Generator() {
         .colors(9);
       setPalette(generatedPaletteElse);
     }
-    console.log('effect 1');
   }, [debouncedColor]);
 
   const handleSelectedColor = (event) => {
